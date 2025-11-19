@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Online Legal Consultation System
+
+A modern web application for streamlining legal consultations with features like appointment booking, case tracking, document management, and secure payments.
+
+## Features
+
+- 🔐 **Authentication** - Secure login/registration for clients and lawyers
+- 📅 **Appointment Booking** - Easy online scheduling system
+- 💼 **Case Management** - Real-time case progress tracking
+- 📄 **Document Storage** - Secure document upload and management
+- 💳 **Payment Processing** - Automated payment handling (Stripe ready)
+- 🔔 **Notifications** - Real-time updates for users
+- 👥 **Role-Based Access** - Separate dashboards for clients and lawyers
+
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **Styling**: Tailwind CSS
+- **Database**: SQLite with Prisma ORM
+- **Authentication**: NextAuth.js v5
+- **Language**: TypeScript
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ installed
+- npm or yarn package manager
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd legal-consultation-system
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Set up environment variables:
+```bash
+# .env.local is already created with:
+AUTH_SECRET=your-secret-key-change-this-in-production
+AUTH_URL=http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Generate a secure AUTH_SECRET:
+```bash
+openssl rand -base64 32
+```
+Replace the value in `.env.local`
 
-## Learn More
+5. Database is already set up with migrations applied
 
-To learn more about Next.js, take a look at the following resources:
+6. Run the development server:
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+7. Open [http://localhost:3000](http://localhost:3000)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Database Schema
 
-## Deploy on Vercel
+The application includes the following models:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **User** - Client, Lawyer, or Admin accounts
+- **LawyerProfile** - Extended profile for lawyers
+- **Appointment** - Consultation bookings
+- **Case** - Legal cases with progress tracking
+- **CaseUpdate** - Timeline updates for cases
+- **Document** - Secure file storage
+- **Payment** - Transaction records
+- **Notification** - User notifications
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Usage
+
+### For Clients:
+1. Register as a CLIENT
+2. Browse available lawyers
+3. Book appointments
+4. Track case progress
+5. Upload documents
+6. Manage payments
+
+### For Lawyers:
+1. Register as a LAWYER
+2. View appointment requests
+3. Manage client cases
+4. Update case progress
+5. Access client documents
+
+## Project Structure
+
+```
+legal-consultation-system/
+├── app/
+│   ├── api/              # API routes
+│   ├── dashboard/        # Dashboard pages
+│   ├── login/           # Login page
+│   ├── register/        # Registration page
+│   └── page.tsx         # Landing page
+├── lib/
+│   ├── auth.ts          # NextAuth configuration
+│   └── prisma.ts        # Prisma client
+├── prisma/
+│   └── schema.prisma    # Database schema
+└── types/               # TypeScript types
+```
+
+## Future Enhancements
+
+- Video consultation integration (WebRTC)
+- Stripe payment integration
+- Email notifications
+- Document encryption
+- Advanced search and filtering
+- Calendar integration
+- Mobile app
+
+## License
+
+MIT
