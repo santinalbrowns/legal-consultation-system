@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { signOut } from "@/lib/auth"
+import Link from "next/link"
 
 async function getLawyerData(userId: string) {
   const [appointments, cases] = await Promise.all([
@@ -38,6 +39,9 @@ export default async function LawyerDashboard() {
             <h1 className="text-2xl font-bold text-indigo-600">LegalConsult</h1>
             <div className="flex items-center gap-4">
               <span className="text-gray-700">Welcome, {session.user.name}</span>
+              <Link href="/dashboard/lawyer/profile" className="text-indigo-600 hover:text-indigo-700">
+                Profile
+              </Link>
               <form
                 action={async () => {
                   "use server"
@@ -76,7 +80,12 @@ export default async function LawyerDashboard() {
 
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-xl font-semibold mb-4">Upcoming Appointments</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Upcoming Appointments</h3>
+              <Link href="/dashboard/lawyer/appointments" className="text-indigo-600 hover:underline text-sm">
+                View All
+              </Link>
+            </div>
             {appointments.length === 0 ? (
               <p className="text-gray-500">No appointments scheduled</p>
             ) : (
@@ -96,7 +105,12 @@ export default async function LawyerDashboard() {
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-xl font-semibold mb-4">Client Cases</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Client Cases</h3>
+              <Link href="/dashboard/lawyer/cases" className="text-indigo-600 hover:underline text-sm">
+                View All
+              </Link>
+            </div>
             {cases.length === 0 ? (
               <p className="text-gray-500">No cases yet</p>
             ) : (
