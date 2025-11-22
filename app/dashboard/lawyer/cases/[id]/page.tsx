@@ -187,7 +187,15 @@ export default async function CaseDetailPage({
 
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-xl font-semibold mb-4">Client Information</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold">Client Information</h3>
+                <Link
+                  href={`/dashboard/messages?userId=${caseData.client.id}`}
+                  className="text-indigo-600 hover:underline text-sm"
+                >
+                  💬 Message
+                </Link>
+              </div>
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-gray-500">Name</p>

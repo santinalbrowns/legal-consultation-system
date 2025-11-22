@@ -45,6 +45,9 @@ export default async function ClientDashboard() {
             <h1 className="text-2xl font-bold text-indigo-600">LegalConsult</h1>
             <div className="flex items-center gap-4">
               <span className="text-gray-700">Welcome, {session.user.name}</span>
+              <Link href="/dashboard/messages" className="text-indigo-600 hover:text-indigo-700">
+                Messages
+              </Link>
               <Link href="/dashboard/client/profile" className="text-indigo-600 hover:text-indigo-700">
                 Profile
               </Link>

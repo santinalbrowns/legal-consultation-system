@@ -56,14 +56,22 @@ export default async function CasesPage() {
             {cases.map((caseItem) => (
               <div key={caseItem.id} className="bg-white rounded-lg shadow p-6">
                 <div className="flex justify-between items-start mb-4">
-                  <div>
+                  <div className="flex-1">
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
                       {caseItem.title}
                     </h3>
-                    <p className="text-gray-600 mb-2">
-                      Lawyer: {caseItem.lawyer.name}
-                    </p>
-                    <p className="text-gray-500 text-sm">{caseItem.description}</p>
+                    <div className="flex items-center gap-3">
+                      <p className="text-gray-600">
+                        Lawyer: {caseItem.lawyer.name}
+                      </p>
+                      <Link
+                        href={`/dashboard/messages?userId=${caseItem.lawyerId}`}
+                        className="text-indigo-600 hover:underline text-sm"
+                      >
+                        💬 Message
+                      </Link>
+                    </div>
+                    <p className="text-gray-500 text-sm mt-2">{caseItem.description}</p>
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
