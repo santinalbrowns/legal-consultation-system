@@ -113,18 +113,24 @@ export default async function AppointmentsPage() {
                   )}
                 </div>
 
-                {appointment.meetingLink && (
-                  <div className="mt-4 pt-4 border-t">
+                <div className="mt-4 pt-4 border-t flex gap-3">
+                  <Link
+                    href={`/video-call/${appointment.id}`}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"
+                  >
+                    📹 Join Video Call
+                  </Link>
+                  {appointment.meetingLink && (
                     <a
                       href={appointment.meetingLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-indigo-600 hover:underline font-medium"
+                      className="text-indigo-600 hover:underline text-sm flex items-center"
                     >
-                      Join Video Consultation →
+                      External Link →
                     </a>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {appointment.notes && (
                   <div className="mt-4 pt-4 border-t">

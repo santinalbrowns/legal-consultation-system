@@ -117,6 +117,13 @@ export default async function LawyerAppointmentsPage() {
 
                 <div className="mt-4 pt-4 border-t">
                   <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={`/video-call/${appointment.id}`}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm"
+                    >
+                      📹 Start Video Call
+                    </Link>
+                    
                     {appointment.case ? (
                       <p className="text-sm text-gray-600 flex items-center">
                         Case: <span className="font-medium ml-1">{appointment.case.title}</span>
