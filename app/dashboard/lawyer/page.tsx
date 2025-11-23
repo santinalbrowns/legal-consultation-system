@@ -42,6 +42,9 @@ export default async function LawyerDashboard() {
               <Link href="/dashboard/messages" className="text-indigo-600 hover:text-indigo-700">
                 Messages
               </Link>
+              <Link href="/dashboard/lawyer/reports" className="text-indigo-600 hover:text-indigo-700">
+                Reports
+              </Link>
               <Link href="/dashboard/lawyer/profile" className="text-indigo-600 hover:text-indigo-700">
                 Profile
               </Link>

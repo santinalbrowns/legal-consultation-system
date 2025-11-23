@@ -75,7 +75,7 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
           <Link
             href="/dashboard/admin/lawyers"
             className="bg-white rounded-lg shadow p-8 hover:shadow-lg transition-shadow"
@@ -125,6 +125,19 @@ export default async function AdminDashboard() {
                 <p className="text-gray-600">Monitor all legal cases in the system</p>
               </div>
               <div className="text-4xl">💼</div>
+            </div>
+          </Link>
+
+          <Link
+            href="/dashboard/admin/reports"
+            className="bg-white rounded-lg shadow p-8 hover:shadow-lg transition-shadow"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Reports & Analytics</h3>
+                <p className="text-gray-600">View system statistics and charts</p>
+              </div>
+              <div className="text-4xl">📊</div>
             </div>
           </Link>
         </div>
