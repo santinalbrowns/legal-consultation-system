@@ -11,9 +11,12 @@ export default function PaymentProcessingPage() {
 
   useEffect(() => {
     const processPayment = async () => {
-      const paymentStatus = "COMPLETED"
+      // If no status provided, assume successful (Paychangu redirects here on success)
+      const paymentStatus = searchParams.get("status") || "successful"
       const tx_ref = searchParams.get("tx_ref")
-      const amount = searchParams.get("amount")
+      let amount = searchParams.get("amount")
+      
+      console.log("Payment processing page - Status:", paymentStatus, "TX Ref:", tx_ref, "Amount:", amount)
 
       if (!tx_ref) {
         setStatus("error")
@@ -29,11 +32,37 @@ export default function PaymentProcessingPage() {
       if (parts.length >= 2 && parts[0] === "CASE") {
         caseId = parts[1]
       }
+      
+      // Try to get amount from localStorage if not in URL
+      if (!amount && caseId) {
+        try {
+          const storedData = localStorage.getItem(`payment_${caseId}`)
+          if (storedData) {
+            const paymentData = JSON.parse(storedData)
+            amount = paymentData.amount?.toString()
+            console.log("Retrieved amount from localStorage:", amount)
+            // Clean up localStorage
+            localStorage.removeItem(`payment_${caseId}`)
+          }
+        } catch (e) {
+          console.error("Error reading from localStorage:", e)
+        }
+      }
 
       if (!caseId) {
         setStatus("error")
         setMessage("Invalid case reference")
         setTimeout(() => router.push("/dashboard/client/cases"), 3000)
+        return
+      }
+
+      // Check if payment was cancelled or failed
+      if (paymentStatus && (paymentStatus.toLowerCase() === "cancelled" || paymentStatus.toLowerCase() === "canceled")) {
+        setStatus("error")
+        setMessage("Payment was cancelled")
+        setTimeout(() => {
+          router.push(`/dashboard/client/cases/${caseId}/payment?payment=cancelled`)
+        }, 2000)
         return
       }
 

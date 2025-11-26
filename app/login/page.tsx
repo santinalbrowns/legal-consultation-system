@@ -94,6 +94,10 @@ export default function LoginPage() {
             Register here
           </Link>
         </p>
+        
+        <p className="mt-3 text-center text-xs text-gray-500">
+          Lawyers: Contact an administrator to create your account
+        </p>
       </div>
     </div>
   )

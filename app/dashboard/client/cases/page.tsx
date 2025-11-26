@@ -125,7 +125,12 @@ export default async function CasesPage() {
                 <div className="grid md:grid-cols-3 gap-4 mt-4 pt-4 border-t">
                   <div>
                     <p className="text-sm text-gray-500">Documents</p>
-                    <p className="font-medium">{caseItem.documents.length}</p>
+                    <Link
+                      href={`/dashboard/client/cases/${caseItem.id}/documents`}
+                      className="font-medium text-indigo-600 hover:underline"
+                    >
+                      {caseItem.documents.length} files
+                    </Link>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Updates</p>

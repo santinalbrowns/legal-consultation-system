@@ -39,11 +39,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    // Determine payment status
-    const paymentStatus =
-      status === "successful" ? "COMPLETED" : status === "failed" ? "FAILED" : "PENDING"
+    // Determine payment status - handle various status formats
+    console.log("Raw status from Paychangu:", status)
+    
+    let paymentStatus: "COMPLETED" | "FAILED" | "PENDING" = "PENDING"
+    
+    if (status) {
+      const statusLower = status.toLowerCase()
+      if (statusLower === "successful" || statusLower === "success" || statusLower === "completed") {
+        paymentStatus = "COMPLETED"
+      } else if (statusLower === "failed" || statusLower === "failure" || statusLower === "error") {
+        paymentStatus = "FAILED"
+      }
+    }
 
-    console.log("Processing payment with status:", paymentStatus)
+    console.log("Mapped payment status:", paymentStatus, "from raw status:", status)
 
     // Check if payment already exists
     const existingPayment = await prisma.payment.findUnique({
@@ -68,17 +78,44 @@ export async function POST(request: Request) {
     } else {
       // Create new payment
       console.log("Creating new payment for case:", caseId)
+      // Determine payment amount from multiple sources
+      let paymentAmount = amount ? parseFloat(amount) : 0
+      
+      // If amount is not provided, check existing payment or lawyer's rate
+      if (paymentAmount === 0) {
+        // Check if there's an existing payment with an amount
+        const existingPaymentCheck = await prisma.payment.findUnique({
+          where: { caseId: caseId },
+        })
+        
+        if (existingPaymentCheck && existingPaymentCheck.amount > 0) {
+          paymentAmount = existingPaymentCheck.amount
+          console.log("Using existing payment amount:", paymentAmount)
+        } else {
+          // Try to get lawyer's hourly rate as default
+          const lawyer = await prisma.user.findUnique({
+            where: { id: caseData.lawyerId },
+            include: { lawyerProfile: true },
+          })
+          
+          if (lawyer?.lawyerProfile?.hourlyRate) {
+            paymentAmount = lawyer.lawyerProfile.hourlyRate
+            console.log("Using lawyer's hourly rate as payment amount:", paymentAmount)
+          }
+        }
+      }
+      
       payment = await prisma.payment.create({
         data: {
           caseId: caseId,
           userId: caseData.clientId,
-          amount: amount ? parseFloat(amount) : 0,
+          amount: paymentAmount,
           status: paymentStatus,
           transactionId: tx_ref,
           paymentMethod: "Paychangu",
         },
       })
-      console.log("Payment created successfully:", payment.id)
+      console.log("Payment created successfully:", payment.id, "Amount:", paymentAmount)
     }
 
     // Create notifications only for successful payments

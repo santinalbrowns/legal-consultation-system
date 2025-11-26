@@ -15,6 +15,15 @@ export async function POST(request: Request) {
     const body = await request.json()
     const validatedData = registerSchema.parse(body)
 
+    // Only allow CLIENT registration through public endpoint
+    // Lawyers must be added by admin
+    if (validatedData.role === "LAWYER") {
+      return NextResponse.json(
+        { error: "Lawyers can only be added by administrators" },
+        { status: 403 }
+      )
+    }
+
     const existingUser = await prisma.user.findUnique({
       where: { email: validatedData.email },
     })
@@ -46,8 +55,9 @@ export async function POST(request: Request) {
     return NextResponse.json(user, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ error: error.issues }, { status: 400 })
     }
+    console.error("Registration error:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

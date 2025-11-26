@@ -146,6 +146,14 @@ export default function CasePaymentPage() {
     setLoading(true)
     setError("")
 
+    // Store payment details in localStorage for retrieval after redirect
+    const paymentData = {
+      caseId: caseId,
+      amount: amount,
+      timestamp: Date.now(),
+    }
+    localStorage.setItem(`payment_${caseId}`, JSON.stringify(paymentData))
+
     try {
       window.PaychanguCheckout({
           public_key: process.env.NEXT_PUBLIC_PAYCHANGU_PUBLIC_KEY,

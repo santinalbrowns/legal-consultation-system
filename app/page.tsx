@@ -82,6 +82,9 @@ export default async function Home() {
             >
               Start Your Consultation
             </Link>
+            <p className="mt-4 text-sm text-gray-500">
+              For lawyers: Contact an administrator to join our platform
+            </p>
           </div>
         </div>
       </main>

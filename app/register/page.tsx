@@ -97,19 +97,13 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
-              I am a
-            </label>
-            <select
-              id="role"
-              name="role"
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            >
-              <option value="CLIENT">Client</option>
-              <option value="LAWYER">Lawyer</option>
-            </select>
+          {/* Hidden field - only clients can register */}
+          <input type="hidden" name="role" value="CLIENT" />
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              <strong>Note:</strong> Registering as a client. Lawyers are added by administrators only.
+            </p>
           </div>
 
           <button

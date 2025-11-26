@@ -7,6 +7,10 @@ export async function POST(request: Request) {
     
     console.log("=== Payment POST callback received ===")
     console.log("Full body:", JSON.stringify(body, null, 2))
+    console.log("Status:", body.status)
+    console.log("Amount:", body.amount)
+    console.log("TX Ref:", body.tx_ref)
+    console.log("Meta:", body.meta)
 
     const { tx_ref, status, amount, meta } = body
 
@@ -22,8 +26,21 @@ export async function POST(request: Request) {
       where: { caseId: meta.caseId },
     })
 
-    const paymentStatus = status === "successful" ? "COMPLETED" : 
-                         status === "failed" ? "FAILED" : "PENDING"
+    // Determine payment status - handle various status formats
+    console.log("Raw status from Paychangu:", status)
+    
+    let paymentStatus: "COMPLETED" | "FAILED" | "PENDING" = "PENDING"
+    
+    if (status) {
+      const statusLower = status.toLowerCase()
+      if (statusLower === "successful" || statusLower === "success" || statusLower === "completed") {
+        paymentStatus = "COMPLETED"
+      } else if (statusLower === "failed" || statusLower === "failure" || statusLower === "error") {
+        paymentStatus = "FAILED"
+      }
+    }
+    
+    console.log("Mapped payment status:", paymentStatus)
 
     if (existingPayment) {
       // Update existing payment
@@ -98,11 +115,94 @@ export async function GET(request: Request) {
     const amount = searchParams.get("amount")
     
     console.log("=== Payment GET callback ===")
+    console.log("All params:", Object.fromEntries(searchParams.entries()))
     console.log("Status:", status, "TX Ref:", tx_ref, "Amount:", amount)
     
-    // Redirect to processing page with all parameters
+    // If Paychangu redirects here, we assume payment was successful
+    // Extract case ID from tx_ref and update payment directly
+    if (tx_ref) {
+      const parts = tx_ref.split("-")
+      if (parts.length >= 2 && parts[0] === "CASE") {
+        const caseId = parts[1]
+        
+        try {
+          // Get case and payment info
+          const caseData = await prisma.case.findUnique({
+            where: { id: caseId },
+            include: {
+              payment: true,
+            },
+          })
+          
+          if (caseData) {
+            // Get lawyer's hourly rate for amount
+            const lawyer = await prisma.user.findUnique({
+              where: { id: caseData.lawyerId },
+              include: { lawyerProfile: true },
+            })
+            
+            const paymentAmount = amount 
+              ? parseFloat(amount) 
+              : (caseData.payment?.amount || lawyer?.lawyerProfile?.hourlyRate || 0)
+            
+            if (caseData.payment) {
+              // Update existing payment to COMPLETED
+              await prisma.payment.update({
+                where: { id: caseData.payment.id },
+                data: {
+                  status: "COMPLETED",
+                  transactionId: tx_ref,
+                  amount: paymentAmount,
+                  updatedAt: new Date(),
+                },
+              })
+              console.log("Payment updated to COMPLETED for case:", caseId)
+            } else {
+              // Create new payment as COMPLETED
+              await prisma.payment.create({
+                data: {
+                  caseId: caseId,
+                  userId: caseData.clientId,
+                  amount: paymentAmount,
+                  status: "COMPLETED",
+                  transactionId: tx_ref,
+                  paymentMethod: "Paychangu",
+                },
+              })
+              console.log("Payment created as COMPLETED for case:", caseId)
+            }
+            
+            // Create notifications
+            await prisma.notification.create({
+              data: {
+                userId: caseData.clientId,
+                title: "Payment Completed",
+                message: `Your payment of MWK ${paymentAmount} for case "${caseData.title}" has been completed successfully.`,
+              },
+            })
+            
+            await prisma.notification.create({
+              data: {
+                userId: caseData.lawyerId,
+                title: "Payment Received",
+                message: `Payment of MWK ${paymentAmount} received for case "${caseData.title}".`,
+              },
+            })
+            
+            // Redirect to success page
+            return NextResponse.redirect(
+              new URL(`/dashboard/client/cases?payment=success&caseId=${caseId}`, request.url)
+            )
+          }
+        } catch (error) {
+          console.error("Error processing payment in GET callback:", error)
+        }
+      }
+    }
+    
+    // Fallback: redirect to processing page if we couldn't handle it directly
     const processingUrl = new URL("/dashboard/client/cases/payment-processing", request.url)
-    processingUrl.searchParams.set("status", status || "unknown")
+    processingUrl.searchParams.set("status", status || "successful")
     processingUrl.searchParams.set("tx_ref", tx_ref || "")
     if (amount) {
       processingUrl.searchParams.set("amount", amount)

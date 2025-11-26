@@ -115,7 +115,13 @@ export default async function CaseDetailPage({
 
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Documents</h3>
-            <p className="text-3xl font-bold text-blue-600">{caseData.documents.length}</p>
+            <p className="text-3xl font-bold text-blue-600 mb-2">{caseData.documents.length}</p>
+            <Link
+              href={`/dashboard/lawyer/cases/${caseData.id}/documents`}
+              className="text-sm text-indigo-600 hover:underline"
+            >
+              Manage Documents →
+            </Link>
           </div>
         </div>
 
