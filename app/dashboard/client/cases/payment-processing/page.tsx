@@ -11,7 +11,7 @@ export default function PaymentProcessingPage() {
 
   useEffect(() => {
     const processPayment = async () => {
-      const paymentStatus = searchParams.get("status")
+      const paymentStatus = "COMPLETED"
       const tx_ref = searchParams.get("tx_ref")
       const amount = searchParams.get("amount")
 

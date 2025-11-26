@@ -99,9 +99,36 @@ export default function CasePaymentPage() {
     }
   }, [caseData?.payment?.status])
 
+  // Prevent making payment if already completed or case is closed
+  useEffect(() => {
+    if (caseData?.payment?.status === "COMPLETED" && !paymentStatus) {
+      // Don't redirect if we're showing a status message
+      const urlParams = new URLSearchParams(window.location.search)
+      if (!urlParams.get("payment")) {
+        // Auto redirect after 3 seconds if payment is already completed
+        const timer = setTimeout(() => {
+          router.push("/dashboard/client/cases")
+        }, 3000)
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [caseData?.payment?.status, paymentStatus, router])
+
   function makePayment() {
     if (!caseData || !user) {
       setError("Missing required data")
+      return
+    }
+
+    // Prevent payment if already completed
+    if (caseData.payment?.status === "COMPLETED") {
+      setError("Payment has already been completed for this case")
+      return
+    }
+
+    // Prevent payment if case is closed
+    if (caseData.status === "CLOSED") {
+      setError("Cannot make payment for a closed case")
       return
     }
 
