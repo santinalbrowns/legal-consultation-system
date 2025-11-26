@@ -15,6 +15,7 @@ type Case = {
   id: string
   title: string
   description: string
+  status: string
   lawyer: {
     name: string
     lawyerProfile: {
@@ -164,6 +165,12 @@ export default function CasePaymentPage() {
           </div>
         )}
 
+        {caseData.status === "CLOSED" && (
+          <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-4">
+            ⚠ This case is closed. Payments cannot be made for closed cases.
+          </div>
+        )}
+
         {caseData.payment?.status === "COMPLETED" && (
           <div className="bg-green-50 text-green-600 p-4 rounded-lg mb-4">
             ✓ Payment already completed for this case
@@ -180,6 +187,20 @@ export default function CasePaymentPage() {
             <div>
               <p className="text-sm text-gray-500">Lawyer</p>
               <p className="font-medium">{caseData.lawyer.name}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Case Status</p>
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                  caseData.status === "CLOSED"
+                    ? "bg-gray-100 text-gray-800"
+                    : caseData.status === "IN_PROGRESS"
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-yellow-100 text-yellow-800"
+                }`}
+              >
+                {caseData.status.replace("_", " ")}
+              </span>
             </div>
             {caseData.lawyer.lawyerProfile && (
               <div>
@@ -253,10 +274,10 @@ export default function CasePaymentPage() {
           <button
             type="button"
             onClick={makePayment}
-            disabled={loading || amount <= 0 || caseData.payment?.status === "COMPLETED" || !scriptLoaded}
+            disabled={loading || amount <= 0 || caseData.payment?.status === "COMPLETED" || caseData.status === "CLOSED" || !scriptLoaded}
             className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Processing..." : scriptLoaded ? "Pay Now with Paychangu" : "Loading Payment System..."}
+            {loading ? "Processing..." : caseData.status === "CLOSED" ? "Case Closed - Payment Not Available" : scriptLoaded ? "Pay Now with Paychangu" : "Loading Payment System..."}
           </button>
 
           <p className="text-xs text-gray-500 text-center mt-4">

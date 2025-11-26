@@ -141,7 +141,7 @@ export default async function CasesPage() {
                   </div>
                 </div>
 
-                {(!caseItem.payment || caseItem.payment.status !== "COMPLETED") && (
+                {(!caseItem.payment || caseItem.payment.status !== "COMPLETED") && caseItem.status !== "CLOSED" && (
                   <div className="mt-4 pt-4 border-t">
                     <Link
                       href={`/dashboard/client/cases/${caseItem.id}/payment`}
@@ -149,6 +149,14 @@ export default async function CasesPage() {
                     >
                       💳 Make Payment
                     </Link>
+                  </div>
+                )}
+                
+                {caseItem.status === "CLOSED" && (!caseItem.payment || caseItem.payment.status !== "COMPLETED") && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm text-gray-500 italic">
+                      This case is closed. Payments are no longer accepted.
+                    </p>
                   </div>
                 )}
 
