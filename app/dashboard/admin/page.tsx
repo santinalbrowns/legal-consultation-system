@@ -140,6 +140,19 @@ export default async function AdminDashboard() {
               <div className="text-4xl">📊</div>
             </div>
           </Link>
+
+          <Link
+            href="/dashboard/admin/financial-reports"
+            className="bg-white rounded-lg shadow p-8 hover:shadow-lg transition-shadow"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Financial Reports</h3>
+                <p className="text-gray-600">Revenue, payments, and financial analytics</p>
+              </div>
+              <div className="text-4xl">💰</div>
+            </div>
+          </Link>
         </div>
       </main>
     </div>

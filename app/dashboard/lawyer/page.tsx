@@ -67,7 +67,7 @@ export default async function LawyerDashboard() {
           <p className="text-gray-600">Manage your appointments and client cases</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-700 mb-2">Total Appointments</h3>
             <p className="text-3xl font-bold text-indigo-600">{appointments.length}</p>
@@ -82,6 +82,11 @@ export default async function LawyerDashboard() {
             <h3 className="text-lg font-semibold text-gray-700 mb-2">Total Cases</h3>
             <p className="text-3xl font-bold text-blue-600">{cases.length}</p>
           </div>
+          <Link href="/dashboard/lawyer/earnings" className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">My Earnings</h3>
+            <p className="text-3xl font-bold text-green-600">💰</p>
+            <p className="text-sm text-indigo-600 mt-2">View Details →</p>
+          </Link>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
