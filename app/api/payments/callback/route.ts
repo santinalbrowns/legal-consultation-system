@@ -5,13 +5,17 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     
-    console.log("Payment callback received:", body)
+    console.log("=== Payment POST callback received ===")
+    console.log("Full body:", JSON.stringify(body, null, 2))
 
     const { tx_ref, status, amount, meta } = body
 
     if (!meta?.caseId) {
+      console.error("Missing case ID in meta:", meta)
       return NextResponse.json({ error: "Missing case ID" }, { status: 400 })
     }
+
+    console.log("Processing payment for case:", meta.caseId)
 
     // Check if payment already exists
     const existingPayment = await prisma.payment.findUnique({
@@ -23,6 +27,7 @@ export async function POST(request: Request) {
 
     if (existingPayment) {
       // Update existing payment
+      console.log("Updating existing payment:", existingPayment.id)
       await prisma.payment.update({
         where: { id: existingPayment.id },
         data: {
@@ -31,6 +36,7 @@ export async function POST(request: Request) {
           amount: parseFloat(amount),
         },
       })
+      console.log("Payment updated successfully to status:", paymentStatus)
     } else {
       // Create new payment
       const caseData = await prisma.case.findUnique({
@@ -41,7 +47,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Case not found" }, { status: 404 })
       }
 
-      await prisma.payment.create({
+      console.log("Creating new payment for case:", meta.caseId)
+      const newPayment = await prisma.payment.create({
         data: {
           caseId: meta.caseId,
           userId: caseData.clientId,
@@ -51,6 +58,7 @@ export async function POST(request: Request) {
           paymentMethod: "Paychangu",
         },
       })
+      console.log("Payment created successfully:", newPayment.id, "Status:", paymentStatus)
 
       // Create notification for client
       await prisma.notification.create({
@@ -82,11 +90,28 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  // Handle GET callback (redirect from Paychangu)
-  const { searchParams } = new URL(request.url)
-  const status = searchParams.get("status")
-  const tx_ref = searchParams.get("tx_ref")
+  try {
+    // Handle GET callback (redirect from Paychangu after payment)
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get("status")
+    const tx_ref = searchParams.get("tx_ref")
+    const amount = searchParams.get("amount")
+    
+    console.log("=== Payment GET callback ===")
+    console.log("Status:", status, "TX Ref:", tx_ref, "Amount:", amount)
+    
+    // Redirect to processing page with all parameters
+    const processingUrl = new URL("/dashboard/client/cases/payment-processing", request.url)
+    processingUrl.searchParams.set("status", status || "unknown")
+    processingUrl.searchParams.set("tx_ref", tx_ref || "")
+    if (amount) {
+      processingUrl.searchParams.set("amount", amount)
+    }
 
-  // Redirect to appropriate page
-  return NextResponse.redirect(new URL("/dashboard/client/cases", request.url))
+    console.log("Redirecting to processing page:", processingUrl.pathname)
+    return NextResponse.redirect(processingUrl)
+  } catch (error) {
+    console.error("GET callback error:", error)
+    return NextResponse.redirect(new URL("/dashboard/client/cases", request.url))
+  }
 }

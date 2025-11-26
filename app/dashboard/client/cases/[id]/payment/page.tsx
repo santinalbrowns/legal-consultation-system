@@ -45,9 +45,20 @@ export default function CasePaymentPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [scriptLoaded, setScriptLoaded] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null)
 
   useEffect(() => {
-    // Load case data
+    // Check for payment status in URL
+    const urlParams = new URLSearchParams(window.location.search)
+    const status = urlParams.get("payment")
+    if (status) {
+      setPaymentStatus(status)
+    }
+  }, [])
+
+  const loadCaseData = () => {
+    setRefreshing(true)
     fetch(`/api/cases/${caseId}`)
       .then((res) => res.json())
       .then((data) => {
@@ -56,12 +67,17 @@ export default function CasePaymentPage() {
         } else {
           setCaseData(data)
           // Set default amount based on lawyer's hourly rate
-          if (data.lawyer?.lawyerProfile?.hourlyRate) {
+          if (data.lawyer?.lawyerProfile?.hourlyRate && !amount) {
             setAmount(data.lawyer.lawyerProfile.hourlyRate)
           }
         }
       })
       .catch(() => setError("Failed to load case"))
+      .finally(() => setRefreshing(false))
+  }
+
+  useEffect(() => {
+    loadCaseData()
 
     // Load user profile
     fetch("/api/profile")
@@ -72,6 +88,16 @@ export default function CasePaymentPage() {
         }
       })
   }, [caseId])
+
+  // Auto-refresh payment status every 5 seconds if payment is pending
+  useEffect(() => {
+    if (caseData?.payment?.status === "PENDING") {
+      const interval = setInterval(() => {
+        loadCaseData()
+      }, 5000)
+      return () => clearInterval(interval)
+    }
+  }, [caseData?.payment?.status])
 
   function makePayment() {
     if (!caseData || !user) {
@@ -100,7 +126,7 @@ export default function CasePaymentPage() {
           amount: amount,
           currency: "MWK",
           callback_url: `${window.location.origin}/api/payments/callback`,
-          return_url: `${window.location.origin}/dashboard/client/cases/${caseId}`,
+          return_url: `${window.location.origin}/dashboard/client/cases/${caseId}/payment?payment=cancelled`,
           customer: {
             email: user.email,
             first_name: user.name.split(" ")[0],
@@ -150,15 +176,63 @@ export default function CasePaymentPage() {
         <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-indigo-600">Make Payment</h1>
-            <Link href={`/dashboard/client/cases`} className="text-gray-700 hover:text-indigo-600">
-              ← Back to Cases
-            </Link>
+            <h1 className="text-2xl font-bold text-indigo-600">
+              {caseData.payment?.status === "COMPLETED" ? "Payment Completed" : "Make Payment"}
+            </h1>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={loadCaseData}
+                disabled={refreshing}
+                className="text-gray-700 hover:text-indigo-600 disabled:opacity-50"
+                title="Refresh payment status"
+              >
+                <svg className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+              <Link href={`/dashboard/client/cases`} className="text-gray-700 hover:text-indigo-600">
+                ← Back to Cases
+              </Link>
+            </div>
           </div>
         </div>
       </nav>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {paymentStatus === "cancelled" && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-800">
+                  Payment was cancelled. You can try again when ready.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {paymentStatus === "failed" && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-800">
+                  Payment failed. Please try again or contact support if the issue persists.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {error && (
           <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4">
             {error}
@@ -172,8 +246,66 @@ export default function CasePaymentPage() {
         )}
 
         {caseData.payment?.status === "COMPLETED" && (
-          <div className="bg-green-50 text-green-600 p-4 rounded-lg mb-4">
-            ✓ Payment already completed for this case
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-lg font-semibold text-green-900">Payment Completed Successfully!</h3>
+                <p className="mt-2 text-sm text-green-700">
+                  Your payment of <span className="font-bold">MWK {caseData.payment.amount.toFixed(2)}</span> has been processed successfully.
+                </p>
+                <p className="mt-1 text-sm text-green-600">
+                  This case has been paid for. You can now view the case details.
+                </p>
+                <div className="mt-4">
+                  <Link
+                    href="/dashboard/client/cases"
+                    className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
+                  >
+                    View All Cases →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {caseData.payment?.status === "PENDING" && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="animate-spin h-5 w-5 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-800">
+                  Payment is being processed... This page will update automatically.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {caseData.payment?.status === "FAILED" && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-800">
+                  Payment failed. Please try again or contact support if the issue persists.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -227,7 +359,8 @@ export default function CasePaymentPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        {caseData.payment?.status !== "COMPLETED" && caseData.status !== "CLOSED" && (
+          <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Payment Information</h2>
           
           <div className="mb-6">
@@ -284,6 +417,7 @@ export default function CasePaymentPage() {
             Secure payment powered by Paychangu
           </p>
         </div>
+        )}
       </main>
     </div>
     </>

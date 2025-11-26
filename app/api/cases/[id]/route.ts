@@ -20,7 +20,16 @@ export async function GET(
           select: { id: true, name: true, email: true },
         },
         lawyer: {
-          select: { id: true, name: true, email: true },
+          select: { 
+            id: true, 
+            name: true, 
+            email: true,
+            lawyerProfile: {
+              select: {
+                hourlyRate: true,
+              },
+            },
+          },
         },
         updates: {
           orderBy: { createdAt: "desc" },

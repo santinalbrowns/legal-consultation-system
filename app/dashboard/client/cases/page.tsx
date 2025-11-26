@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
+import { Suspense } from "react"
+import PaymentSuccessMessage from "./PaymentSuccessMessage"
 
 export default async function CasesPage() {
   const session = await auth()
@@ -43,6 +45,10 @@ export default async function CasesPage() {
           <h2 className="text-3xl font-bold text-gray-900 mb-2">My Cases</h2>
           <p className="text-gray-600">Track the progress of your legal cases</p>
         </div>
+
+        <Suspense fallback={null}>
+          <PaymentSuccessMessage />
+        </Suspense>
 
         {cases.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-12 text-center">
